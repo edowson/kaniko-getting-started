@@ -1,0 +1,31 @@
+apiVersion: v1
+kind: Pod
+metadata:
+  name: kaniko
+spec:
+  containers:
+  - name: kaniko
+    image: gcr.io/kaniko-project/executor:latest
+    env:
+      - name: REPOSITORY
+        value: ubuntu
+      - name: TAG
+        value: '18.04'
+      - name: BUILD_VERSION
+        value: bionic
+    args: ["--dockerfile=/workspace/kaniko-getting-started/docker/ubuntu/network-utils/Dockerfile",
+           "--build-arg", "REPOSITORY=$(REPOSITORY)",
+           "--build-arg", "TAG=$(TAG)",
+           "--context=dir://workspace",
+           "--destination=image",
+           "--tarPath=/workspace/ubuntu-network-utils-$(BUILD_VERSION).tar",
+           "--no-push"]
+    volumeMounts:
+      - name: workspace
+        mountPath: /workspace
+  restartPolicy: Never
+  volumes:
+    - name: workspace
+      persistentVolumeClaim:
+        claimName: pvc-kaniko-workspace
+
