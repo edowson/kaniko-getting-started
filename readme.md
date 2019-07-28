@@ -103,14 +103,98 @@ pvc-kaniko-workspace        Bound    pv-kaniko-workspace        10Gi       RWO  
 
 Create a pod definition for starting a kaniko container for building docker images.
 
+```bash
+cd k8s/pod
+sudo nano k8s-pod-kaniko.yaml
+```
+
 ```yaml
 apiVersion: v1
 kind: Pod
 metadata:
   name: kaniko
-
+spec:
+  containers:
+  - name: kaniko
+    image: gcr.io/kaniko-project/executor:latest
+    env:
+      - name: REPOSITORY
+        value: ubuntu
+      - name: TAG
+        value: '18.04'
+    args: ["--dockerfile=/workspace/kaniko-getting-started/docker/ubuntu/network-utils/Dockerfile",
+           "--build-arg - REPOSITORY=$(REPOSITORY)",
+           "--build-arg - TAG=$(TAG)",
+           "--context=dir://workspace",
+           "--destination=image",
+           "--tarPath=/workspace/ubuntu-network-utils-docker-image.tar",
+           "--no-push"]
+    volumeMounts:
+      - name: workspace
+        mountPath: /workspace
+  restartPolicy: Never
+  volumes:
+    - name: workspace
+      persistentVolumeClaim:
+        claimName: pvc-kaniko-workspace
 ```
 
+Create pod
+```bash
+kubectl create -f ./k8s-pod-kaniko.yaml
+```
+
+Check pod status:
+```bash
+kubectl get pods
+
+NAME                                   READY   STATUS    RESTARTS   AGE
+kaniko                                 1/1     Running   0          10s
+```
+
+Check logs:
+```bash
+kubectl logs kaniko
+```
+
+The docker image tarball will be generate in the persistent volume storage location:
+```
+/mnt/storage/pv/pv-kaniko/ubuntu-network-utils-bionic.tar
+```
+
+---
+
+## Issues
+
+01. [Build image into local #636 - kaniko](https://github.com/GoogleContainerTools/kaniko/issues/636)
+
+Solution 01:
+```bash
+--destination=image --tarPath=/your_workspace/image.tar
+can save the image to the local directory. And you need to manually load it to docker daemon.
+```
+
+Solution 02:
+```bash
+docker run --rm -w /workspace -v (pwd):/workspace gcr.io/kaniko-project/executor --tarPath=/path/to/image.tar --context=auth-provider --no-push
+```
+
+02. [Error: unknown flag when using --build-arg in buildtemplate #565](https://github.com/knative/build/issues/565)
+
+Solution 01: Create your build template as shown below:
+```
+name: 'gcr.io/kaniko-project/executor:latest'
+  args:
+   - --dockerfile=${DOCKERFILE}
+    - --build-arg
+    -  A_TARGET=green
+    - --build-arg
+    - B_TARGET=blue
+    - --destination=${IMAGE}
+    - --cache=true
+```
+
+Without being passed as separate items into args, it's interpreted as one arg that includes a space, as if you'd passed `executor "--build-arg A_TARGET=green"` instead of executor `--build-arg A_TARGET=green` like you expect, and the tool requires.
 
 ---
 
