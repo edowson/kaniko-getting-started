@@ -10,9 +10,9 @@ The following docker images have been provided as build examples:
 ## Setup
 
 We will need to
-- [create a persistent volume](#create-persistent-volume) to allocate physical storage on the kubernetes cluster for a kaniko workspace, for the docker files
-- [create a persistent volume claim](#create-persistent-volume-claim)
-- [create a kaniko pod definition](#create-pod-definition)
+- [create a persistent volume](#create-persistent-volume), to allocate physical storage on the kubernetes cluster for a kaniko workspace,
+- [create a persistent volume claim](#create-persistent-volume-claim),
+- [create a pod definition](#create-pod-definition), for a kaniko container for building docker images.
 
 ### Create Persistent Volume
 
