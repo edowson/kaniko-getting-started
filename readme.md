@@ -5,7 +5,7 @@ This repository contains examples that show how to use Kaniko for building docke
 ## Docker
 
 The following docker images have been provided as build examples:
-- [edowson/ubuntu-network-utils:xenial](./docker/ubuntu/xenial/network-utils)
+- [edowson/ubuntu-network-utils:xenial](./docker/ubuntu/network-utils)
 
 ## Setup
 
